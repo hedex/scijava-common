@@ -66,7 +66,7 @@ import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
 import org.junit.Test;
-import org.scijava.util.FileUtils;
+import org.scijava.types.Nil;
 /**
  * Tests {@link Types}.
  * 
@@ -310,6 +310,12 @@ public class TypesTest {
 		}
 	}
 
+	/** Tests [@link Types#unbox(Class)}. */
+	@Test
+	public void testUnbox() {
+		// TODO
+	}
+
 	/** Tests {@link Types#nullValue(Class)}. */
 	@Test
 	public void testNullValue() {
@@ -548,6 +554,67 @@ public class TypesTest {
 		assertFalse(Types.isInstance(new Object(), null));
 	}
 
+	/** Tests {@link Types#satisfies(Type[], Type[])} for raw classes. */
+	@Test
+	public void testSatisfiesRaw() {
+		// f(Number, Integer)
+		final Type[] dest = { Number.class, Integer.class };
+
+		// f(Double, Integer)
+		// [OK] Double -> Number
+		final Type[] srcOK = { Double.class, Integer.class };
+		assertTrue(Types.satisfies(srcOK, dest));
+
+		// f(String, Integer)
+		// [MISS] String is not assignable to Number
+		final Type[] srcMiss = { String.class, Integer.class };
+		assertFalse(Types.satisfies(srcMiss, dest));
+	}
+
+	/** Tests {@link Types#satisfies(Type[], Type[])} for single arguments. */
+	@Test
+	public <T extends Number, U extends BigInteger> void testSatisfiesSingle() {
+		// <T extends Number> f(T)
+		final Type t = new Nil<T>() {}.getType();
+		final Type u = new Nil<U>() {}.getType();
+		final Type[] tDest = { t };
+
+		assertTrue(Types.satisfies(new Type[] { Double.class }, tDest));
+		assertTrue(Types.satisfies(new Type[] { Number.class }, tDest));
+		assertTrue(Types.satisfies(new Type[] { t }, tDest));
+		assertTrue(Types.satisfies(new Type[] { u }, tDest));
+		assertFalse(Types.satisfies(new Type[] { String.class }, tDest));
+	}
+
+	/**
+	 * Tests {@link Types#satisfies(Type[], Type[])} when the same type parameter
+	 * appears across multiple destination types.
+	 */
+	@Test
+	public <T> void testSatisfiesMatchingT() {
+		// <T> f(List<T>, List<T>)
+		final Type[] dest = { //
+			new Nil<List<T>>() {}.getType(), //
+			new Nil<List<T>>() {}.getType(), //
+		};
+
+		// f(List<Integer>, List<Integer>)
+		// [OK] T -> Integer
+		final Type[] srcOK = { //
+			new Nil<List<Integer>>() {}.getType(), //
+			new Nil<List<Integer>>() {}.getType()
+		};
+		assertTrue(Types.satisfies(srcOK, dest));
+
+		// f(List<String>, List<Number>)
+		// [MISS] T cannot be both String and Number
+		final Type[] srcMiss = { //
+			new Nil<List<String>>() {}.getType(), //
+			new Nil<List<Number>>() {}.getType() //
+		};
+		assertFalse(Types.satisfies(srcMiss, dest));
+	}
+
 	/** Tests {@link Types#cast(Object, Class)}. */
 	@Test
 	public void testCast() {
@@ -595,6 +662,24 @@ public class TypesTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testEnumValueNonEnum() {
 		Types.enumValue("HOOYAH", String.class);
+	}
+
+	/** Tests {@link Types#parameterize(Class, Map)}. */
+	@Test
+	public void testParameterizeMap() {
+		// TODO
+	}
+
+	/** Tests {@link Types#parameterize(Class, Type...)}. */
+	@Test
+	public void testParameterizeTypes() {
+		// TODO
+	}
+
+	/** Tests {@link Types#parameterizeWithOwner(Type, Class, Type...)}. */
+	@Test
+	public void testParameterizeWithOwner() {
+		// TODO
 	}
 
 	// -- Helper classes --

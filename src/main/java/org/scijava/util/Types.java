@@ -31,6 +31,8 @@
 
 package org.scijava.util;
 
+import com.google.common.reflect.TypeToken;
+
 import java.io.File;
 
 // Portions of this class were adapted from the
@@ -68,6 +70,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.scijava.util.FileUtils;
@@ -747,6 +750,61 @@ public final class Types {
 	}
 
 	/**
+	 * Discerns whether it would be legal to pass a sequence of references of the
+	 * given source types to a method with parameters typed according to the
+	 * specified sequence of destination types.
+	 * <p>
+	 * An example: suppose you have a method
+	 * {@code <T extends Number> mergeLists(List<T> list1, List<T> list2)}. It is
+	 * legal to pass two {@code List<Integer>} instances to the method, but
+	 * illegal to pass a {@code List<Integer>} and {@code List<Double>} because
+	 * {@code T} cannot be both {@code Integer} and {@code Double} simultaneously.
+	 * </p>
+	 * 
+	 * @param src
+	 * @param dest
+	 * @return True iff
+	 */
+	public static boolean satisfies(final Type[] src, final Type[] dest) {
+		if (src.length != dest.length) {
+			throw new IllegalArgumentException("src and dest lengths differ");
+		}
+		for (int i = 0; i < src.length; i++) {
+			if (dest[i] instanceof Class) {
+				final Class<?> classDest = (Class<?>) dest[i];
+				Optional<Class<?>> first = Types.raws(src[i]).stream().filter(
+					raw -> classDest.isAssignableFrom(raw)).findFirst();
+				if (!first.isPresent()) return false;
+			}
+			else if (dest[i] instanceof ParameterizedType) {
+				final ParameterizedType pTypeDest = (ParameterizedType) dest[i];
+				// TODO
+			}
+			else if (dest[i] instanceof TypeVariable) {
+				final TypeVariable<?> typeVarDest = (TypeVariable<?>) dest[i];
+				// TODO
+			}
+			else if (dest[i] instanceof WildcardType) {
+				final WildcardType wildcardDest = (WildcardType) dest[i];
+				// TODO
+			}
+			else if (dest[i] instanceof GenericArrayType) {
+				final GenericArrayType arrayDest = (GenericArrayType) dest[i];
+				// TODO
+			}
+			final Type t = TypeToken.of(dest[i]).resolveType(src[i]).getType();
+			System.out.println("src[" + i + "] = " + t);
+		}
+		return true;
+	}
+
+	public static boolean satisfies(
+		final Map<TypeVariable<?>, Type> typeVarAssigns)
+	{
+		return TypeUtils.typesSatisfyVariables(typeVarAssigns);
+	}
+
+	/**
 	 * Casts the given object to the specified type, or null if the types are
 	 * incompatible.
 	 */
@@ -787,22 +845,22 @@ public final class Types {
 	public static ParameterizedType parameterize(final Class<?> rawType,
 		final Type... typeArgs)
 	{
-		return parameterize(rawType, rawType.getDeclaringClass(), typeArgs);
+		return parameterizeWithOwner(null, rawType, typeArgs);
 	}
 
 	/**
 	 * Creates a new {@link ParameterizedType} of the given class together with
 	 * the specified type arguments.
 	 *
-	 * @param rawType The class of the {@link ParameterizedType}.
 	 * @param ownerType The owner type of the parameterized class.
+	 * @param rawType The class of the {@link ParameterizedType}.
 	 * @param typeArgs The type arguments to use in parameterizing it.
 	 * @return The newly created {@link ParameterizedType}.
 	 */
-	public static ParameterizedType parameterize(final Class<?> rawType,
-		final Type ownerType, final Type... typeArgs)
+	public static ParameterizedType parameterizeWithOwner(final Type ownerType,
+		final Class<?> rawType, final Type... typeArgs)
 	{
-		return new TypeUtils.ParameterizedTypeImpl(rawType, ownerType, typeArgs);
+		return TypeUtils.parameterizeWithOwner(ownerType, rawType, typeArgs);
 	}
 
 	/**
@@ -3177,7 +3235,7 @@ public final class Types {
 				Arrays.fill(arguments, UNBOUND_WILDCARD);
 				final Type owner = clazz.getDeclaringClass() == null ? null
 					: addWildcardParameters(clazz.getDeclaringClass());
-				return parameterize(clazz, owner, arguments);
+				return parameterizeWithOwner(owner, clazz, arguments);
 			}
 			else {
 				return clazz;
@@ -3557,7 +3615,7 @@ public final class Types {
 				}
 				final Type ownerType = (pType.getOwnerType() == null) ? null : capture(
 					pType.getOwnerType());
-				return parameterize(clazz, ownerType, capturedArguments);
+				return parameterizeWithOwner(ownerType, clazz, capturedArguments);
 			}
 			return type;
 		}
@@ -3735,9 +3793,10 @@ public final class Types {
 			}
 			else if (type instanceof ParameterizedType) {
 				final ParameterizedType pType = (ParameterizedType) type;
-				return parameterize((Class<?>) pType.getRawType(), pType
-					.getOwnerType() == null ? pType.getOwnerType() : map(pType
-						.getOwnerType()), map(pType.getActualTypeArguments()));
+				final Type ownerType = pType.getOwnerType() == null ? //
+					pType.getOwnerType() : map(pType.getOwnerType());
+				return parameterizeWithOwner(ownerType, (Class<?>) pType.getRawType(),
+					map(pType.getActualTypeArguments()));
 			}
 			else if (type instanceof WildcardType) {
 				final WildcardType wType = (WildcardType) type;

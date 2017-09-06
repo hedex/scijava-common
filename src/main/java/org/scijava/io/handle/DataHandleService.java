@@ -9,13 +9,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -40,7 +40,7 @@ import org.scijava.service.SciJavaService;
 /**
  * Interface for low-level data I/O: reading and writing bytes using
  * {@link DataHandle}s.
- * 
+ *
  * @author Curtis Rueden
  * @see IOService
  * @see Location
@@ -62,5 +62,48 @@ public interface DataHandleService extends
 	@Override
 	default Class<Location> getType() {
 		return Location.class;
+	}
+
+	/**
+	 * Wraps the provided {@link DataHandle} in a read-only buffer for accelerated
+	 * reading.
+	 *
+	 * @param handle the handle to wrap
+	 * @see ReadBufferDataHandle#ReadBufferDataHandle(DataHandle)
+	 */
+	default DataHandle<Location> readBuffer(final DataHandle<Location> handle) {
+		return new ReadBufferDataHandle(handle);
+	}
+
+	/**
+	 * Creates a {@link DataHandle} on the provided {@link Location} wrapped in a
+	 * read-only buffer for accelerated reading.
+	 *
+	 * @param location the handle to wrap
+	 * @see ReadBufferDataHandle#ReadBufferDataHandle(DataHandle)
+	 */
+	default DataHandle<Location> readBuffer(final Location location) {
+		return new ReadBufferDataHandle(create(location));
+	}
+
+	/**
+	 * Creates a {@link DataHandle} on the provided {@link Location} wrapped in a
+	 * write-only buffer for accelerated writing.
+	 *
+	 * @param location the handle to wrap
+	 */
+	default DataHandle<Location> writeBuffer(final Location location) {
+		return new WriteBufferDataHandle(create(location));
+	}
+
+	/**
+	 * Wraps the provided {@link DataHandle} in a write-only buffer for
+	 * accelerated writing.
+	 *
+	 * @param handle the handle to wrap
+	 * @see WriteBufferDataHandle#WriteBufferDataHandle(DataHandle)
+	 */
+	default DataHandle<Location> writeBuffer(final DataHandle<Location> handle) {
+		return new WriteBufferDataHandle(handle);
 	}
 }

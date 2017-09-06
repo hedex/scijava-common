@@ -62,8 +62,8 @@ public class WriteBufferDataHandleTest extends DataHandleTest {
 		loc = createLocation();
 		try (final DataHandle<Location> handle = //
 			dataHandleService.create(loc);
-				final DataHandle<Location> buffer = dataHandleService
-					.writeBuffer(handle))
+				final DataHandle<Location> buffer = //
+					dataHandleService.writeBuffer(handle))
 		{
 			checkWrites(buffer);
 		}

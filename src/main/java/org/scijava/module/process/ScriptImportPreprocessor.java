@@ -11,6 +11,7 @@ import org.scijava.module.ModuleInfo;
 import org.scijava.module.ModuleService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.script.ScriptImport;
 import org.scijava.script.ScriptModule;
 
 @Plugin(type = PreprocessorPlugin.class) // TODO set the priority?
@@ -27,7 +28,7 @@ public class ScriptImportPreprocessor extends AbstractPreprocessorPlugin {
 		if (!(module instanceof ScriptModule)) return;
 		// get import declarations from ScriptInfo
 		@SuppressWarnings("unchecked")
-		Map<String, String> importMap = (Map<String, String>) ((ScriptModule) module).getInfo().getProperty("imports");
+		Map<String, ScriptImport> importMap = (Map<String, ScriptImport>) ((ScriptModule) module).getInfo().getProperty("imports");
 		if (importMap == null) return;
 		for (String moduleImport : importMap.keySet()) {
 			ModuleInfo importModule = modules.getModuleByName(moduleImport);

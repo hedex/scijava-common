@@ -32,13 +32,13 @@
 
 package org.scijava.script.process;
 
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.script.ScriptImport;
 
 /**
  * A {@link ScriptProcessor} which parses the {@code #@import} directive.
@@ -88,9 +88,9 @@ public class ImportDirectiveScriptProcessor extends DirectiveScriptProcessor {
 
 	private void addImport(String importItem, String scope) {
 		@SuppressWarnings("unchecked")
-		Map<String, String> map = (Map<String, String>) info().getProperty("imports");
-		if (map==null) map = new HashMap<>();
-		map.put(importItem, scope);
+		Map<String, ScriptImport> map = (Map<String, ScriptImport>) info().getProperty("imports");
+		if (map==null) map = new LinkedHashMap<>();
+		map.put(importItem, new ScriptImport(scope));
 		info().setProperty("imports", map);
 	}
 }

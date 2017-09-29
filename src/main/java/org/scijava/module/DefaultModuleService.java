@@ -43,7 +43,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.scijava.MenuPath;
 import org.scijava.Priority;
@@ -160,7 +159,9 @@ public class DefaultModuleService extends AbstractService implements
 				.collect(Collectors.toList());
 		if (moduleInfos.size() > 1) {
 			log.warn("Duplicate name " + name + " for modules: " + //
-					String.join(", ", moduleInfos.stream().map(m -> m.getIdentifier()).collect(Collectors.toList())));
+					String.join(", ", moduleInfos.stream().map(ModuleInfo::getIdentifier).collect(Collectors.toList())));
+			log.warn("Using first registered module");
+			return moduleInfos.get(0);
 		}
 		else if (moduleInfos.size() == 1) return moduleInfos.get(0);
 		return null;

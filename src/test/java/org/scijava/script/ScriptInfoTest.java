@@ -344,7 +344,7 @@ public class ScriptInfoTest {
 		info = new ScriptInfo(context, "scriptHeader.bsizes", new StringReader(script));
 		info.inputs(); // HACK: Force lazy initialization.
 
-		assertEquals("utils", ((Map<String, String>) info.getProperty("imports")).get("myutils"));
+		assertEquals("utils", ((Map<String, ScriptImport>) info.getProperty("imports")).get("myutils").getScope());
 	}
 
 	/**

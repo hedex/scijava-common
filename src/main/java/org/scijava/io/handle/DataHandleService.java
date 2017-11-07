@@ -32,6 +32,8 @@
 
 package org.scijava.io.handle;
 
+import java.io.IOException;
+
 import org.scijava.io.IOService;
 import org.scijava.io.location.Location;
 import org.scijava.plugin.WrapperService;
@@ -105,5 +107,19 @@ public interface DataHandleService extends
 	 */
 	default DataHandle<Location> writeBuffer(final DataHandle<Location> handle) {
 		return new WriteBufferDataHandle(handle);
+	}
+
+	/**
+	 * Convenience method to test whether it describes an existing file.
+	 *
+	 * @param Location the location to test
+	 * @return The result of {@link DataHandle#exists()} on a newly created handle
+	 *         on this location
+	 * @throws IOException
+	 */
+	default boolean handleExists(Location Location) throws IOException {
+		try (DataHandle<Location> handle = create(Location)) {
+			return handle.exists();
+		}
 	}
 }
